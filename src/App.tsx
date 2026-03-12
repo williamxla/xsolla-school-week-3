@@ -1,9 +1,16 @@
+import { useState } from 'react'
 import './App.css'
 import { ItemCard } from './components/ItemCard'
+import { LoginModal } from './components/LoginModal'
+import { CartSidebar } from './components/CartSidebar'
 import { useItems } from './hooks/useItems'
+import { useCart } from './hooks/useCart'
 
 function App() {
   const { items, loading, error } = useItems()
+  const [showLogin, setShowLogin] = useState(false)
+  const [showCart, setShowCart] = useState(false)
+  const { cartItems, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice } = useCart()
 
   return (
     <div className="shop">
@@ -17,8 +24,16 @@ function App() {
             <span>Xsolla Shop</span>
           </div>
           <nav className="shop__nav">
-            <a href="#">Home</a>
-            <a href="#">Cart</a>
+            <button className="shop__cart-btn" onClick={() => setShowCart(true)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="9" cy="21" r="1" />
+                <circle cx="20" cy="21" r="1" />
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+              </svg>
+              Cart
+              {totalItems > 0 && <span className="shop__cart-badge">{totalItems}</span>}
+            </button>
+            <button className="shop__login-btn" onClick={() => setShowLogin(true)}>Login</button>
           </nav>
         </div>
       </header>
@@ -62,7 +77,7 @@ function App() {
               </div>
               <div className="shop__grid">
                 {items.map((item) => (
-                  <ItemCard key={item.id} item={item} />
+                  <ItemCard key={item.id} item={item} onAddToCart={addToCart} />
                 ))}
               </div>
             </>
@@ -73,6 +88,18 @@ function App() {
       <footer className="shop__footer">
         <p>© 2026 Xsolla Shop. All rights reserved.</p>
       </footer>
+
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+
+      <CartSidebar
+        open={showCart}
+        onClose={() => setShowCart(false)}
+        cartItems={cartItems}
+        onUpdateQuantity={updateQuantity}
+        onRemove={removeFromCart}
+        onClear={clearCart}
+        totalPrice={totalPrice}
+      />
     </div>
   )
 }

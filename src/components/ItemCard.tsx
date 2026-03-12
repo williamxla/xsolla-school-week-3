@@ -3,13 +3,14 @@ import { ItemImage } from './ItemImage'
 
 interface ItemCardProps {
   item: Item
+  onAddToCart: (item: Item) => void
 }
 
 function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`
 }
 
-export function ItemCard({ item }: ItemCardProps) {
+export function ItemCard({ item, onAddToCart }: ItemCardProps) {
   const inStock = item.stock > 0
 
   return (
@@ -26,7 +27,7 @@ export function ItemCard({ item }: ItemCardProps) {
         <p className="item-card__desc">{item.description}</p>
         <div className="item-card__footer">
           <span className="item-card__price">{formatPrice(item.price)}</span>
-          <button className="item-card__btn" disabled={!inStock}>
+          <button className="item-card__btn" disabled={!inStock} onClick={() => onAddToCart(item)}>
             {inStock ? 'Add to cart' : 'Unavailable'}
           </button>
         </div>
