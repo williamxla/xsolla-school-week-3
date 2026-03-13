@@ -38,13 +38,14 @@ export const useCart = (items: Item[]) => {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      setLoading(false)
-      return
-    }
-    getCart()
-      .then((data) => {
+    const fetch = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        setLoading(false)
+        return
+      }
+      try {
+        const data = await getCart()
         const mapped: CartItem[] = data
           .map((entry: { item_id: number; quantity: number }) => {
             const item = items.find((i) => i.id === entry.item_id)
@@ -53,9 +54,13 @@ export const useCart = (items: Item[]) => {
           })
           .filter(Boolean)
         dispatch({ type: 'INIT', cartItems: mapped })
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false))
+      } catch (err: any) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetch()
   }, [items])
 
   const addToCart = async (item: Item) => {

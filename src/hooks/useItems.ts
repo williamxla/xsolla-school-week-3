@@ -22,15 +22,17 @@ export function useItems(): UseItemsResult {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    getItems()
-      .then((data) => {
+    const fetch = async () => {
+      try {
+        const data = await getItems()
         setItems(data)
-        setLoading(false)
-      })
-      .catch((err: Error) => {
+      } catch (err: any) {
         setError(err.message)
+      } finally {
         setLoading(false)
-      })
+      }
+    }
+    fetch()
   }, [])
 
   return { items, loading, error }
