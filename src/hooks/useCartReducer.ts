@@ -38,7 +38,6 @@ export const useCart = (items: Item[]) => {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (items.length === 0) return
     const token = localStorage.getItem('token')
     if (!token) {
       setLoading(false)

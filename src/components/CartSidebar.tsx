@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { CartItem } from '../hooks/useCart'
+import type { CartItem } from '../hooks/useCartReducer'
 import { createOrder } from '../api/api'
 
 interface CartSidebarProps {

@@ -4,7 +4,7 @@ import { ItemCard } from './components/ItemCard'
 import { LoginModal } from './components/LoginModal'
 import { CartSidebar } from './components/CartSidebar'
 import { useItems } from './hooks/useItems'
-import { useCart } from './hooks/useCart'
+import { useCart } from './hooks/useCartReducer'
 
 const getTokenEmail = (): string | null => {
   const token = localStorage.getItem('token')
@@ -33,7 +33,7 @@ function App() {
               <rect width="28" height="28" rx="6" fill="#6366f1" />
               <path d="M8 10h12M8 14h8M8 18h10" stroke="white" strokeWidth="2" strokeLinecap="round" />
             </svg>
-            <span>William's Store || Магазин Вильяма</span>
+            <span>William's Store</span>
           </div>
           <nav className="shop__nav">
             <button className="shop__cart-btn" onClick={() => setShowCart(true)}>
