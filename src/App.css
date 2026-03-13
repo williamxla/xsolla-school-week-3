@@ -283,6 +283,20 @@
   background: #4f46e5;
 }
 
+.shop__login-btn--user {
+  background: #e0e7ff;
+  color: #4f46e5;
+  cursor: default;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shop__login-btn--user:hover {
+  background: #e0e7ff;
+}
+
 /* ── Modal ───────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
@@ -436,8 +450,19 @@
   transition: background 0.2s;
 }
 
-.modal__submit:hover {
+.modal__submit:hover:not(:disabled) {
   background: #4f46e5;
+}
+
+.modal__submit:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+
+.modal__error {
+  font-size: 0.85rem;
+  color: #ef4444;
+  margin: 0;
 }
 
 /* ── Cart Button (header) ────────────────────────────── */
@@ -709,6 +734,32 @@
 .cart-sidebar__clear:hover {
   border-color: #ef4444;
   color: #ef4444;
+}
+
+/* ── Toast ───────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 18px 36px;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  z-index: 400;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  animation: fade-in 0.2s ease;
+  white-space: nowrap;
+}
+
+.toast--success {
+  background: #22c55e;
+  color: #fff;
+}
+
+.toast--error {
+  background: #ef4444;
+  color: #fff;
 }
 
 /* ── Footer ──────────────────────────────────────────── */

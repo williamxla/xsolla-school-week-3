@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import { getItems } from '../api/api'
 
 export interface Item {
   id: number
@@ -22,9 +22,9 @@ export function useItems(): UseItemsResult {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    axios.get<Item[]>('http://localhost:8082/items')
-      .then((res) => {
-        setItems(res.data)
+    getItems()
+      .then((data) => {
+        setItems(data)
         setLoading(false)
       })
       .catch((err: Error) => {

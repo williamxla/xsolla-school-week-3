@@ -6,12 +6,24 @@ import { CartSidebar } from './components/CartSidebar'
 import { useItems } from './hooks/useItems'
 import { useCart } from './hooks/useCart'
 
+const getTokenEmail = (): string | null => {
+  const token = localStorage.getItem('token')
+  if (!token) return null
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.email ?? null
+  } catch {
+    return null
+  }
+}
+
 function App() {
   const { items, loading, error } = useItems()
   const [showLogin, setShowLogin] = useState(false)
   const [showCart, setShowCart] = useState(false)
-  const { cartItems, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice } = useCart()
-
+  const [tokenEmail, setTokenEmail] = useState<string | null>(getTokenEmail)
+  const { cartItems, addToCart, clearCart, totalItems, totalPrice } = useCart(items)
+  console.log("cartItems", cartItems)
   return (
     <div className="shop">
       <header className="shop__header">
@@ -21,7 +33,7 @@ function App() {
               <rect width="28" height="28" rx="6" fill="#6366f1" />
               <path d="M8 10h12M8 14h8M8 18h10" stroke="white" strokeWidth="2" strokeLinecap="round" />
             </svg>
-            <span>Xsolla Shop</span>
+            <span>William's Store || Магазин Вильяма</span>
           </div>
           <nav className="shop__nav">
             <button className="shop__cart-btn" onClick={() => setShowCart(true)}>
@@ -33,16 +45,15 @@ function App() {
               Cart
               {totalItems > 0 && <span className="shop__cart-badge">{totalItems}</span>}
             </button>
-            <button className="shop__login-btn" onClick={() => setShowLogin(true)}>Login</button>
+            {tokenEmail
+              ? <button className="shop__login-btn shop__login-btn--user" disabled>{tokenEmail}</button>
+              : <button className="shop__login-btn" onClick={() => setShowLogin(true)}>Login</button>
+            }
           </nav>
         </div>
       </header>
 
       <main className="shop__main">
-        <section className="shop__hero">
-          <h1>Welcome to Xsolla Shop</h1>
-          <p>Discover our exclusive collection of merchandise</p>
-        </section>
 
         <section className="shop__catalog">
           {loading && (
@@ -71,10 +82,6 @@ function App() {
 
           {!loading && !error && items.length > 0 && (
             <>
-              <div className="shop__catalog-header">
-                <h2>All Items</h2>
-                <span className="shop__count">{items.length} products</span>
-              </div>
               <div className="shop__grid">
                 {items.map((item) => (
                   <ItemCard key={item.id} item={item} onAddToCart={addToCart} />
@@ -86,19 +93,17 @@ function App() {
       </main>
 
       <footer className="shop__footer">
-        <p>© 2026 Xsolla Shop. All rights reserved.</p>
+        <p>© 2026 William's Shop. No rights reserved.</p>
       </footer>
 
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
+      {showLogin && <LoginModal onClose={() => { setShowLogin(false); setTokenEmail(getTokenEmail()) }} />}
 
       <CartSidebar
         open={showCart}
         onClose={() => setShowCart(false)}
         cartItems={cartItems}
-        onUpdateQuantity={updateQuantity}
-        onRemove={removeFromCart}
-        onClear={clearCart}
         totalPrice={totalPrice}
+        onClearCart={clearCart}
       />
     </div>
   )

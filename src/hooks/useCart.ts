@@ -1,46 +1,75 @@
-import { useState } from 'react'
+import { useReducer, useEffect, useState } from 'react'
 import type { Item } from './useItems'
+import { getCart, addCartItem } from '../api/api'
 
 export interface CartItem {
   item: Item
   quantity: number
 }
 
-export function useCart() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([])
+type Action =
+  | { type: 'ADD'; item: Item }
+  | { type: 'CLEAR' }
+  | { type: 'INIT'; cartItems: CartItem[] }
 
-  function addToCart(item: Item) {
-    setCartItems((prev) => {
-      const existing = prev.find((ci) => ci.item.id === item.id)
+const cartReducer = (state: CartItem[], action: Action): CartItem[] => {
+  switch (action.type) {
+    case 'INIT':
+      return action.cartItems
+    case 'ADD': {
+      const existing = state.find((ci) => ci.item.id === action.item.id)
       if (existing) {
-        return prev.map((ci) =>
-          ci.item.id === item.id ? { ...ci, quantity: ci.quantity + 1 } : ci
+        return state.map((ci) =>
+          ci.item.id === action.item.id ? { ...ci, quantity: ci.quantity + 1 } : ci
         )
       }
-      return [...prev, { item, quantity: 1 }]
-    })
+      return [...state, { item: action.item, quantity: 1 }]
+    }
+    case 'CLEAR':
+      return []
+    default:
+      return state
   }
+}
 
-  function removeFromCart(itemId: number) {
-    setCartItems((prev) => prev.filter((ci) => ci.item.id !== itemId))
-  }
+export const useCart = (items: Item[]) => {
+  const [cartItems, dispatch] = useReducer(cartReducer, [])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  function updateQuantity(itemId: number, quantity: number) {
-    if (quantity <= 0) {
-      removeFromCart(itemId)
+  useEffect(() => {
+    if (items.length === 0) return
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setLoading(false)
       return
     }
-    setCartItems((prev) =>
-      prev.map((ci) => (ci.item.id === itemId ? { ...ci, quantity } : ci))
-    )
+    getCart()
+      .then((data) => {
+        const mapped: CartItem[] = data
+          .map((entry: { item_id: number; quantity: number }) => {
+            const item = items.find((i) => i.id === entry.item_id)
+            if (!item) return null
+            return { item, quantity: entry.quantity }
+          })
+          .filter(Boolean)
+        dispatch({ type: 'INIT', cartItems: mapped })
+      })
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [items])
+
+  const addToCart = async (item: Item) => {
+    const existing = cartItems.find((ci) => ci.item.id === item.id)
+    const newQuantity = (existing?.quantity ?? 0) + 1
+    await addCartItem(item.id, newQuantity)
+    dispatch({ type: 'ADD', item })
   }
 
-  function clearCart() {
-    setCartItems([])
-  }
+  const clearCart = () => dispatch({ type: 'CLEAR' })
 
   const totalItems = cartItems.reduce((sum, ci) => sum + ci.quantity, 0)
   const totalPrice = cartItems.reduce((sum, ci) => sum + ci.item.price * ci.quantity, 0)
 
-  return { cartItems, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice }
+  return { cartItems, addToCart, clearCart, totalItems, totalPrice, loading, error }
 }

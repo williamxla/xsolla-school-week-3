@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { register as registerApi, login as loginApi } from '../api/api'
 
 interface LoginModalProps {
   onClose: () => void
@@ -6,24 +7,46 @@ interface LoginModalProps {
 
 type Tab = 'login' | 'register'
 
-export function LoginModal({ onClose }: LoginModalProps) {
+export const LoginModal = ({ onClose }: LoginModalProps) => {
   const [tab, setTab] = useState<Tab>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     if (tab === 'login') {
-      console.log('Login:', { email, password })
+      setLoading(true)
+      try {
+        const data = await loginApi(email, password)
+        localStorage.setItem('token', data.token)
+        onClose()
+      } catch (err: any) {
+        setError(err.response?.data?.message ?? 'Login failed. Please try again.')
+      } finally {
+        setLoading(false)
+      }
     } else {
-      console.log('Register:', { email, password })
+      setLoading(true)
+      try {
+        const data = await registerApi(email, password)
+        localStorage.setItem('token', data.token)
+        onClose()
+      } catch (err: any) {
+        setError(err.response?.data?.message ?? 'Registration failed. Please try again.')
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
-  function switchTab(next: Tab) {
+  const switchTab = (next: Tab) => {
     setTab(next)
     setEmail('')
     setPassword('')
+    setError(null)
   }
 
   return (
@@ -76,8 +99,9 @@ export function LoginModal({ onClose }: LoginModalProps) {
               required
             />
           </div>
-          <button type="submit" className="modal__submit">
-            {tab === 'login' ? 'Sign in' : 'Create account'}
+          {error && <p className="modal__error">{error}</p>}
+          <button type="submit" className="modal__submit" disabled={loading}>
+            {loading ? (tab === 'login' ? 'Signing in…' : 'Creating account…') : tab === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
       </div>

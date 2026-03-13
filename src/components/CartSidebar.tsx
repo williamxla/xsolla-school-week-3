@@ -1,30 +1,59 @@
+import { useState } from 'react'
 import type { CartItem } from '../hooks/useCart'
+import { createOrder } from '../api/api'
 
 interface CartSidebarProps {
   open: boolean
   onClose: () => void
   cartItems: CartItem[]
-  onUpdateQuantity: (itemId: number, quantity: number) => void
-  onRemove: (itemId: number) => void
-  onClear: () => void
   totalPrice: number
+  onClearCart: () => void
 }
 
-function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`
-}
+const formatPrice = (amount: number): string =>
+  `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₽`
 
 export function CartSidebar({
   open,
   onClose,
   cartItems,
-  onUpdateQuantity,
-  onRemove,
-  onClear,
   totalPrice,
+  onClearCart,
 }: CartSidebarProps) {
+  const [paying, setPaying] = useState(false)
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message })
+    setTimeout(() => setToast(null), 6000)
+  }
+
+  const handlePay = async () => {
+    setPaying(true)
+    try {
+      const lineItems = cartItems.map(({ item, quantity }) => ({
+        item_id: item.id,
+        quantity,
+        price: item.price,
+      }))
+      await createOrder(lineItems, totalPrice)
+      onClose()
+      onClearCart()
+      showToast('success', 'Payment Succeeded')
+    } catch (err: any) {
+      showToast('error', err.response ?? 'Payment failed. Please try again.')
+    } finally {
+      setPaying(false)
+    }
+  }
+
   return (
     <>
+      {toast && (
+        <div className={`toast toast--${toast.type}`}>
+          {toast.message}
+        </div>
+      )}
       {open && <div className="cart-overlay" onClick={onClose} />}
       <aside className={`cart-sidebar ${open ? 'cart-sidebar--open' : ''}`}>
         <div className="cart-sidebar__header">
@@ -60,27 +89,11 @@ export function CartSidebar({
                     <span className="cart-item__unit-price">{formatPrice(item.price)} each</span>
                   </div>
                   <div className="cart-item__controls">
-                    <div className="cart-item__qty">
-                      <button
-                        className="cart-item__qty-btn"
-                        onClick={() => onUpdateQuantity(item.id, quantity - 1)}
-                        aria-label="Decrease quantity"
-                      >
-                        −
-                      </button>
-                      <span className="cart-item__qty-value">{quantity}</span>
-                      <button
-                        className="cart-item__qty-btn"
-                        onClick={() => onUpdateQuantity(item.id, quantity + 1)}
-                        aria-label="Increase quantity"
-                      >
-                        +
-                      </button>
-                    </div>
+                    <span className="cart-item__qty-value">x{quantity}</span>
                     <span className="cart-item__subtotal">{formatPrice(item.price * quantity)}</span>
                     <button
                       className="cart-item__remove"
-                      onClick={() => onRemove(item.id)}
+                      onClick={() => console.log('Homework: remove item from cart')}
                       aria-label={`Remove ${item.name}`}
                     >
                       ✕
@@ -95,8 +108,10 @@ export function CartSidebar({
                 <span>Total</span>
                 <span className="cart-sidebar__total-price">{formatPrice(totalPrice)}</span>
               </div>
-              <button className="cart-sidebar__checkout">Checkout</button>
-              <button className="cart-sidebar__clear" onClick={onClear}>
+              <button className="cart-sidebar__checkout" onClick={handlePay} disabled={paying}>
+                {paying ? 'Processing…' : 'Pay'}
+              </button>
+              <button className="cart-sidebar__clear" onClick={() => console.log('Homework: clear cart')}>
                 Clear cart
               </button>
             </div>
